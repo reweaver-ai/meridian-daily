@@ -8,6 +8,7 @@ interface NavBarProps {
   activeCategory: Category | 'all';
   onSelectCategory: (category: Category | 'all') => void;
   onOpenCart: () => void;
+  onOpenWishlist: () => void;
 }
 
 export function NavBar({
@@ -16,6 +17,7 @@ export function NavBar({
   activeCategory,
   onSelectCategory,
   onOpenCart,
+  onOpenWishlist,
 }: NavBarProps) {
   return (
     <header className="navbar">
@@ -48,13 +50,15 @@ export function NavBar({
         </nav>
 
         <div className="navbar__actions">
-          <a className="navbar__action" href="#wishlist">
+          <button className="navbar__action" type="button" onClick={onOpenWishlist}>
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 20.4l-1.45-1.32C5.4 14.44 2 11.36 2 7.6 2 4.72 4.26 2.5 7.1 2.5c1.6 0 3.14.75 4.15 1.94l.75.88.75-.88A5.47 5.47 0 0 1 16.9 2.5C19.74 2.5 22 4.72 22 7.6c0 3.76-3.4 6.84-8.55 11.49z" />
             </svg>
-            <span className="visually-hidden">Wishlist</span>
-            {savedCount > 0 && <span className="navbar__count">{savedCount}</span>}
-          </a>
+            <span className="visually-hidden">
+              Wishlist{savedCount === 0 ? ', empty' : `, ${savedCount} item${savedCount === 1 ? '' : 's'}`}
+            </span>
+            {savedCount > 0 && <span className="navbar__count" aria-hidden="true">{savedCount}</span>}
+          </button>
 
           <button className="navbar__action navbar__action--cart" type="button" onClick={onOpenCart}>
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">

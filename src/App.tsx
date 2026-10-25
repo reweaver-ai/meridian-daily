@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavBar } from './components/NavBar';
 import { PromoBanner } from './components/PromoBanner';
 import { Hero } from './components/Hero';
@@ -12,6 +12,7 @@ import { LoyaltyWidget } from './components/LoyaltyWidget';
 import { GiftCardTeaser } from './components/GiftCardTeaser';
 import { NewsletterModal } from './components/NewsletterModal';
 import { CartDrawer } from './components/CartDrawer';
+import { WishlistDrawer } from './components/WishlistDrawer';
 import { Footer } from './components/Footer';
 import type { ShippingQuote } from './components/ShippingEstimate';
 import { CATEGORIES, HERO_IMAGE, PRODUCTS, productById } from './data/products';
@@ -28,6 +29,7 @@ import {
   removeLine,
   setLineQty,
 } from './lib/cart';
+import { loadWishlist, saveWishlist, toggleSaved } from './lib/wishlist';
 
 type Filter = Category | 'all';
 
@@ -59,8 +61,9 @@ function endOfToday(): Date {
 
 export function App() {
   const [lines, setLines] = useState<CartLine[]>([]);
-  const [saved, setSaved] = useState<string[]>([]);
+  const [saved, setSaved] = useState<string[]>(loadWishlist);
   const [cartOpen, setCartOpen] = useState(false);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [newsletterOpen, setNewsletterOpen] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -103,6 +106,15 @@ export function App() {
 
   const totals = useMemo(() => computeTotals(lines, couponCode), [lines, couponCode]);
 
+  const savedProducts = useMemo(
+    () => saved.map(productById).filter((product) => product !== undefined),
+    [saved],
+  );
+
+  useEffect(() => {
+    saveWishlist(saved);
+  }, [saved]);
+
   function handleAdd(id: string) {
     const product = productById(id);
     if (!product) return;
@@ -112,9 +124,13 @@ export function App() {
   }
 
   function handleToggleSaved(id: string) {
-    setSaved((current) =>
-      current.includes(id) ? current.filter((savedId) => savedId !== id) : [...current, id],
-    );
+    setSaved((current) => toggleSaved(current, id));
+  }
+
+  function handleMoveToCart(id: string) {
+    setSaved((current) => current.filter((savedId) => savedId !== id));
+    setWishlistOpen(false);
+    handleAdd(id);
   }
 
   function handleApplyCode(code: string): string | null {
@@ -165,6 +181,7 @@ export function App() {
         activeCategory={filter}
         onSelectCategory={handleSelectCategory}
         onOpenCart={() => setCartOpen(true)}
+        onOpenWishlist={() => setWishlistOpen(true)}
       />
 
       <main>
@@ -343,6 +360,14 @@ export function App() {
         onStartCheckout={() => setCheckingOut(true)}
         onCancelCheckout={() => setCheckingOut(false)}
         onPlaceOrder={handlePlaceOrder}
+      />
+
+      <WishlistDrawer
+        open={wishlistOpen}
+        products={savedProducts}
+        onClose={() => setWishlistOpen(false)}
+        onMoveToCart={handleMoveToCart}
+        onRemove={handleToggleSaved}
       />
 
       <NewsletterModal
